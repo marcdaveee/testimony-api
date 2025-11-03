@@ -1,6 +1,17 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignInDto, SignUpDto } from './dto/auth-dto';
+import { AuthGuard } from './guards/auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -16,5 +27,14 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async logIn(@Body() signInReq: SignInDto) {
     return await this.authService.loginUser(signInReq);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  getMe(@Request() req) {
+    console.log(
+      `Current user -> id: ${req?.user?.userId} | email: ${req?.user?.email}`,
+    );
+    return req.user;
   }
 }

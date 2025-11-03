@@ -11,6 +11,12 @@ import * as argon2 from 'argon2';
 
 import { JwtService } from '@nestjs/jwt';
 
+export interface JwtPayload {
+  userId: number | string;
+
+  email: string;
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -39,7 +45,10 @@ export class AuthService {
       },
     });
 
-    const accessToken = await this.generateToken(user.id, user.email);
+    const accessToken = await this.generateToken({
+      userId: user.id,
+      email: user.email,
+    });
 
     return {
       access_token: accessToken,
@@ -69,19 +78,22 @@ export class AuthService {
       ]);
     }
 
-    const token = await this.generateToken(userAcc.id, userAcc.email);
+    const token = await this.generateToken({
+      userId: userAcc.id,
+      email: userAcc.email,
+    });
 
     return {
       access_token: token,
     };
   }
 
-  async generateToken(id: number | string, email: string) {
+  async generateToken(payload: JwtPayload) {
     return await this.jwtService.signAsync({
-      sub: id,
-      userId: id,
-      username: email,
-      email: email,
+      sub: payload.userId,
+      userId: payload.userId,
+      username: payload.email,
+      email: payload.email,
     });
   }
 
