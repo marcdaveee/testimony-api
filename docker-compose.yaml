@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine # use pre-built PostgreSQL image
+    container_name: testimony-cont-db
+    ports:
+      - '5432-5432' # expose ports from computer
+    environment:
+      POSTGRES_USER: mdv
+      POSTGRES_PASSWORD: mdv17
+      POSTGRES_DB: testimony-db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data #persist data
+
+volumes:
+  postgres_data: #named volume for database storage
+    driver:local

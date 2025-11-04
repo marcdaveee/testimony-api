@@ -14,7 +14,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: JwtPayload) {
+  // Automatically called after passport strategy finished its job!
+  validate(payload: any) {
     return payload;
   }
 }
