@@ -1,1 +1,1 @@
-export * from './testimony-dto.ts';
+export * from './testimony-dto';

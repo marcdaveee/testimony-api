@@ -36,4 +36,10 @@ model Testimony{
   content String
   user User @relation(fields: [userId], references: [id])
   userId Int 
+  isApproved Boolean @default(false)
+  createDate DateTime
+  updateDate DateTime?    
+  isDeleted Boolean @default(false)
+
+  @@map("testimonies")
 }

@@ -4,6 +4,7 @@ import { TestimonyService } from './testimony.service';
 
 @Module({
   controllers: [TestimonyController],
-  providers: [TestimonyService]
+  providers: [TestimonyService],
+  exports: [TestimonyService],
 })
 export class TestimonyModule {}
