@@ -1,6 +1,12 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateTestimonyRequestDto, TestimonyResponseDto } from './dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class TestimonyService {
@@ -53,7 +59,39 @@ export class TestimonyService {
         createDate: 'desc',
       },
     });
-
     return latestTestimonies;
+  }
+
+  async getTestimoniesByUserId(
+    userId: number,
+  ): Promise<TestimonyResponseDto[]> {
+    const testimonies = await this.prisma.testimony.findMany({
+      where: {
+        AND: [{ isApproved: true }, { userId: userId }, { isDeleted: false }],
+      },
+    });
+
+    return testimonies;
+  }
+
+  async getTestimonyDetailsById(
+    testimonyId: number,
+  ): Promise<TestimonyResponseDto> {
+    const testimonyDetails = await this.prisma.testimony.findFirst({
+      where: {
+        AND: [{ id: testimonyId }, { isApproved: true }, { isDeleted: false }],
+      },
+    });
+
+    if (!testimonyDetails) {
+      throw new NotFoundException('Testimony detail was not found');
+    }
+
+    const mappedToDtoObj = Object.assign(
+      TestimonyResponseDto,
+      testimonyDetails,
+    );
+
+    return mappedToDtoObj;
   }
 }

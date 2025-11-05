@@ -6,6 +6,8 @@ import {
   Post,
   UnauthorizedException,
   UseGuards,
+  Req,
+  Param,
 } from '@nestjs/common';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -24,14 +26,27 @@ export class TestimonyController {
   }
 
   @Post('create')
-  async createNewTestimony(@Request() requestDto: CreateTestimonyRequestDto) {
-    if (!requestDto.user) {
+  async createNewTestimony(
+    @Body() createTestimonyDto: CreateTestimonyRequestDto,
+    @Req() request,
+  ) {
+    if (!request.user) {
       throw new UnauthorizedException();
     }
 
     return await this.testimonyService.createTestimony(
-      requestDto,
-      requestDto.user.id,
+      createTestimonyDto,
+      request.user.id,
     );
+  }
+
+  @Get('users/:userId')
+  async getTestimoniesByUserId(@Param('userId') userId: number) {
+    return await this.testimonyService.getTestimoniesByUserId(userId);
+  }
+
+  @Get(':id')
+  async getTestimonyDetailById(@Param('id') id: number) {
+    return await this.testimonyService.getTestimonyDetailsById(id);
   }
 }
