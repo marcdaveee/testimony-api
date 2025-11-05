@@ -21,3 +21,7 @@ export class CreateTestimonyRequestDto {
   @IsNotEmpty()
   content: string;
 }
+
+export class UpdateTestimonyRequestDto extends CreateTestimonyRequestDto {
+  id: number;
+}
