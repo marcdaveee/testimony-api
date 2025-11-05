@@ -1,0 +1,18 @@
+#Use node base image
+FROM node:20.11.1-alpine
+
+#Set working directory
+WORKDIR /app
+
+#Copy package.json and package.lock.json
+COPY package*.json ./
+
+#install dependencies
+RUN npm install --legacy-peer-deps
+
+# Copy the rest of the code
+COPY . .
+
+RUN npm run build
+
+CMD ["npm", "run", "start:dev"]
