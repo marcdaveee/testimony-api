@@ -12,8 +12,9 @@ import {
   UpdateTestimonyRequestDto,
 } from './dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { NotFoundError } from 'rxjs';
-import { dateTimestampProvider } from 'rxjs/internal/scheduler/dateTimestampProvider';
+import { PaginatedRequestDto, PaginatedResponseDto } from 'src/common/dto';
+import { Prisma } from '@prisma/client';
+import { UserResponseDto } from 'src/users/dto';
 
 @Injectable()
 export class TestimonyService {
@@ -21,7 +22,7 @@ export class TestimonyService {
   async createTestimony(
     newTestimony: CreateTestimonyRequestDto,
     userId: number,
-  ): Promise<TestimonyResponseDto> {
+  ) {
     const testimonyLimit = 7;
     // Check if user can still post a testimony
     const userTestimonyCount = await this.prisma.testimony.count({
@@ -54,24 +55,114 @@ export class TestimonyService {
     return postedTestimony;
   }
 
-  async getLatestTestimonies(): Promise<TestimonyResponseDto[]> {
-    const latestTestimonies = await this.prisma.testimony.findMany({
-      where: {
-        AND: [{ isApproved: true }, { isDeleted: false }],
+  async getLatestTestimonies(
+    query: PaginatedRequestDto,
+  ): Promise<PaginatedResponseDto<TestimonyResponseDto>> {
+    const filters: Prisma.TestimonyWhereInput = {};
+
+    if (query.searchTerm) {
+      filters.OR = [
+        {
+          title: {
+            contains: query.searchTerm,
+          },
+        },
+        {
+          content: {
+            contains: query.searchTerm,
+          },
+        },
+      ];
+    }
+
+    filters.AND = [
+      {
+        isApproved: true,
       },
-      include: {
-        user: {},
-      },
-      orderBy: {
-        createDate: 'desc',
-      },
+      { isDeleted: false },
+    ];
+
+    const pageSize = query.pageSize;
+    const pageIndex = query.pageIndex;
+    const pageToSkip = (pageIndex - 1) * pageSize;
+
+    // Execute prisma queries in parallel
+    const [latestTestimonies, totalItems] = await Promise.all([
+      // Get testimony records
+      this.prisma.testimony.findMany({
+        where: filters,
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          createDate: true,
+          updateDate: true,
+          user: {
+            select: {
+              id: true,
+              email: true,
+              userName: true,
+              profile: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  address: true,
+                  country: true,
+                },
+              },
+            },
+          },
+        },
+        skip: pageToSkip,
+        take: pageSize,
+        orderBy: {
+          createDate: 'desc',
+        },
+      }),
+
+      // get count
+      this.prisma.testimony.count({
+        where: filters,
+      }),
+    ]);
+
+    const mappedToDtoObj = latestTestimonies.map((testimony) => {
+      const testimonyDto: TestimonyResponseDto = {
+        id: testimony.id,
+        title: testimony.title,
+        content: testimony.content,
+        userId: testimony.user.id,
+        user: {
+          id: testimony.user.id,
+          email: testimony.user.email,
+          userName: testimony.user.userName || '',
+          firstName: testimony.user?.profile?.firstName || '',
+          lastName: testimony.user?.profile?.lastName || '',
+          address: testimony.user?.profile?.address || '',
+          country: testimony.user?.profile?.country || '',
+        },
+        createDate: testimony.createDate,
+        updateDate: testimony.updateDate,
+      };
+
+      return testimonyDto;
     });
-    return latestTestimonies;
+
+    const totalPages = Math.ceil(totalItems / pageSize);
+
+    const paginatedResponse: PaginatedResponseDto<TestimonyResponseDto> = {
+      items: mappedToDtoObj,
+      pageIndex: query.pageIndex,
+      pageSize: query.pageSize,
+      totalPages: totalPages,
+      hasNext: totalPages > pageIndex,
+      hasPrev: pageIndex > 1,
+    };
+
+    return paginatedResponse;
   }
 
-  async getTestimoniesByUserId(
-    userId: number,
-  ): Promise<TestimonyResponseDto[]> {
+  async getTestimoniesByUserId(userId: number) {
     const testimonies = await this.prisma.testimony.findMany({
       where: {
         AND: [{ isApproved: true }, { userId: userId }, { isDeleted: false }],
@@ -98,9 +189,7 @@ export class TestimonyService {
     return testimonies;
   }
 
-  async getTestimonyDetailsById(
-    testimonyId: number,
-  ): Promise<TestimonyResponseDto> {
+  async getTestimonyDetailsById(testimonyId: number) {
     const testimonyDetails = await this.prisma.testimony.findFirst({
       where: {
         AND: [{ id: testimonyId }, { isApproved: true }, { isDeleted: false }],
@@ -140,7 +229,7 @@ export class TestimonyService {
     testimonyId: number,
     userId: number,
     updatedTestimony: UpdateTestimonyRequestDto,
-  ): Promise<TestimonyResponseDto> {
+  ) {
     const testimonyItemToUpdate = await this.prisma.testimony.findFirst({
       where: {
         id: testimonyId,
