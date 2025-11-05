@@ -76,6 +76,23 @@ export class TestimonyService {
       where: {
         AND: [{ isApproved: true }, { userId: userId }, { isDeleted: false }],
       },
+      include: {
+        user: {
+          select: {
+            id: true,
+            userName: true,
+            email: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+                address: true,
+                country: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     return testimonies;
@@ -87,6 +104,23 @@ export class TestimonyService {
     const testimonyDetails = await this.prisma.testimony.findFirst({
       where: {
         AND: [{ id: testimonyId }, { isApproved: true }, { isDeleted: false }],
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            userName: true,
+            email: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+                address: true,
+                country: true,
+              },
+            },
+          },
+        },
       },
     });
 

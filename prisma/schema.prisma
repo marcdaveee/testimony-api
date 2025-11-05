@@ -20,6 +20,7 @@ model User{
   password String
   createDate DateTime
   updateDate DateTime?
+  profile Profile? 
   testimonies Testimony[]
   @@map("users")
 }
@@ -30,11 +31,23 @@ model Role{
 @@map("roles")
 }
 
+model Profile{
+ userId Int @unique
+ user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ firstName String
+ lastName String
+ birthDate DateTime
+ address String
+ country String
+ createDate DateTime
+ updateDate DateTime? 
+}
+
 model Testimony{
   id Int @id @default(autoincrement())
   title String
   content String
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId Int 
   isApproved Boolean @default(false)
   createDate DateTime
