@@ -1,5 +1,6 @@
-import { IsEnum } from 'class-validator/types/decorator/decorators';
+import { IsEnum, IsNumber, IsOptional, IsPositive } from 'class-validator';
 import { SortBy } from '../enum/sort-by.enum';
+import { Type } from 'class-transformer';
 
 export class PaginatedResponseDto<T> {
   items: T[];
@@ -11,14 +12,23 @@ export class PaginatedResponseDto<T> {
 }
 
 export class PaginatedRequestDto {
+  @IsOptional()
   searchTerm?: string;
 
-  pageIndex: number;
+  @IsNumber()
+  @IsPositive()
+  @Type(() => Number)
+  pageIndex: number = 1;
 
-  pageSize: number;
+  @IsNumber()
+  @IsPositive()
+  @Type(() => Number)
+  pageSize: number = 10;
 
   @IsEnum(SortBy)
-  sortBy: SortBy;
+  @IsOptional()
+  sortBy?: SortBy;
 
+  @IsOptional()
   orderBy?: string;
 }

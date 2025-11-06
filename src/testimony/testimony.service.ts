@@ -12,9 +12,11 @@ import {
   UpdateTestimonyRequestDto,
 } from './dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { PaginatedRequestDto, PaginatedResponseDto } from 'src/common/dto';
+import {
+  PaginatedRequestDto,
+  PaginatedResponseDto,
+} from 'src/common/dto/paginated-dto';
 import { Prisma } from '@prisma/client';
-import { UserResponseDto } from 'src/users/dto';
 
 @Injectable()
 export class TestimonyService {

@@ -9,11 +9,13 @@ import {
   Req,
   Param,
   Put,
+  Query,
 } from '@nestjs/common';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { TestimonyService } from './testimony.service';
 import { CreateTestimonyRequestDto, UpdateTestimonyRequestDto } from './dto';
+import { PaginatedRequestDto } from 'src/common/dto/paginated-dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('testimonies')
@@ -22,8 +24,8 @@ export class TestimonyController {
 
   @Public()
   @Get('latest')
-  async getLatestTestimonies() {
-    return await this.testimonyService.getLatestTestimonies();
+  async getLatestTestimonies(@Query() query: PaginatedRequestDto) {
+    return await this.testimonyService.getLatestTestimonies(query);
   }
 
   @Post('create')
