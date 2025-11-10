@@ -16,8 +16,10 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { TestimonyService } from './testimony.service';
 import { CreateTestimonyRequestDto, UpdateTestimonyRequestDto } from './dto';
 import { PaginatedRequestDto } from 'src/common/dto/paginated-dto';
+import { ApiTags } from '@nestjs/swagger';
 
 @UseGuards(JwtAuthGuard)
+@ApiTags('testimonies')
 @Controller('testimonies')
 export class TestimonyController {
   constructor(private testimonyService: TestimonyService) {}
@@ -28,7 +30,7 @@ export class TestimonyController {
     return await this.testimonyService.getLatestTestimonies(query);
   }
 
-  @Post('create')
+  @Post()
   async createNewTestimony(
     @Body() createTestimonyDto: CreateTestimonyRequestDto,
     @Req() request,
