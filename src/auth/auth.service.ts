@@ -72,10 +72,12 @@ export class AuthService {
     );
 
     if (!result) {
-      throw new UnauthorizedException([
-        'email incorrect email or password',
-        'password incorrect email or password',
-      ]);
+      throw new UnauthorizedException({        
+        message: [
+          'email: incorrect email or password',
+          'password: incorrect email or password',
+        ],
+      });
     }
 
     const token = await this.generateToken({
