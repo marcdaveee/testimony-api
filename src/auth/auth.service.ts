@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -24,7 +25,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async createUser(newUser: SignUpDto): Promise<{ access_token: string }> {
+  async createUser(newUser: SignUpDto) {
     const isExist = await this.prisma.user.findFirst({
       where: {
         email: { equals: newUser.email },
@@ -32,7 +33,7 @@ export class AuthService {
     });
 
     if (isExist) {
-      throw new HttpException('email already in use', HttpStatus.BAD_REQUEST);
+      throw new BadRequestException(['email already in use']);
     }
 
     const hashedPass = await argon2.hash(newUser.password);
@@ -52,6 +53,10 @@ export class AuthService {
 
     return {
       access_token: accessToken,
+      user: {
+        id: user.id,
+        email: user.email,
+      },
     };
   }
 
