@@ -72,7 +72,7 @@ export class AuthService {
     );
 
     if (!result) {
-      throw new UnauthorizedException({        
+      throw new UnauthorizedException({
         message: [
           'email: incorrect email or password',
           'password: incorrect email or password',
@@ -87,6 +87,10 @@ export class AuthService {
 
     return {
       access_token: token,
+      user: {
+        id: userAcc.id,
+        email: userAcc.email,
+      },
     };
   }
 
