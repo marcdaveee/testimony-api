@@ -67,7 +67,7 @@ export class TestimonyController {
 
     return await this.testimonyService.updateTestimonyItem(
       id,
-      req.userId,
+      req.user.userId,
       updatedTestimonyDto,
     );
   }
