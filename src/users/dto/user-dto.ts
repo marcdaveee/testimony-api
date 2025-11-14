@@ -7,3 +7,13 @@ export class UserResponseDto {
   address: string;
   country: string;
 }
+
+export class CreateProfileRequestDto {
+  firstName: string;
+  lastName: string;
+  address: string;
+  country: string;
+  birthDate: Date;
+}
+
+export class updateProfileRequestDto extends CreateProfileRequestDto {}

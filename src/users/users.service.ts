@@ -1,6 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UserResponseDto } from './dto';
+import {
+  CreateProfileRequestDto,
+  updateProfileRequestDto,
+  UserResponseDto,
+} from './dto';
 import { User } from '@prisma/client';
 
 @Injectable()
@@ -39,7 +47,7 @@ export class UsersService {
     });
   }
 
-  async getUserProfile(userId: number): Promise<UserResponseDto> {
+  async getUserProfileById(userId: number): Promise<UserResponseDto> {
     const user = await this.prisma.user.findFirst({
       select: {
         id: true,
@@ -74,5 +82,64 @@ export class UsersService {
     };
 
     return mappedToDtoObj;
+  }
+
+  async createUserProfile(request: CreateProfileRequestDto, userId: number) {
+    // Check if already have initial profile
+    const hasProfile = await this.prisma.profile.findFirst({
+      where: {
+        userId: userId,
+      },
+    });
+
+    if (hasProfile) {
+      throw new BadRequestException('Profile already exists.');
+    }
+
+    const newProfile = await this.prisma.profile.create({
+      data: {
+        userId: userId,
+        firstName: request.firstName,
+        lastName: request.lastName,
+        birthDate: request.birthDate,
+        address: request.address,
+        country: request.country,
+        createDate: new Date(),
+      },
+    });
+
+    // return the profile data
+    return newProfile;
+  }
+
+  async updateUserProfile(request: updateProfileRequestDto, userId: number) {
+    // Check if already have initial profile
+    const hasProfile = await this.prisma.profile.findFirst({
+      where: {
+        userId: userId,
+      },
+    });
+
+    if (!hasProfile) {
+      throw new BadRequestException('Profile was not found.');
+    }
+
+    const updatedProfile = await this.prisma.profile.update({
+      where: {
+        userId: userId,
+      },
+      data: {
+        userId: userId,
+        firstName: request.firstName,
+        lastName: request.lastName,
+        birthDate: request.birthDate,
+        address: request.address,
+        country: request.country,
+        updateDate: new Date(),
+      },
+    });
+
+    // return the profile data
+    return updatedProfile;
   }
 }
