@@ -48,37 +48,33 @@ export class UsersService {
   }
 
   async getUserProfileById(userId: number): Promise<UserResponseDto> {
-    const user = await this.prisma.user.findFirst({
-      select: {
-        id: true,
-        userName: true,
-        email: true,
-        profile: {
+    const profile = await this.prisma.profile.findFirst({
+      include: {
+        user: {
           select: {
-            firstName: true,
-            lastName: true,
-            address: true,
-            country: true,
+            id: true,
+            userName: true,
+            email: true,
           },
         },
       },
       where: {
-        id: userId,
+        userId: userId,
       },
     });
 
-    if (!user) {
+    if (!profile) {
       throw new NotFoundException('User profile not found');
     }
 
     const mappedToDtoObj: UserResponseDto = {
-      id: user.id,
-      userName: user.userName || undefined,
-      email: user.email,
-      firstName: user.profile?.firstName || '',
-      lastName: user.profile?.lastName || '',
-      address: user.profile?.address || '',
-      country: user.profile?.country || '',
+      id: profile.user.id,
+      userName: profile.user.userName || undefined,
+      email: profile.user.email,
+      firstName: profile?.firstName || '',
+      lastName: profile?.lastName || '',
+      address: profile?.address || '',
+      country: profile?.country || '',
     };
 
     return mappedToDtoObj;

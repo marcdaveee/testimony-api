@@ -5,7 +5,7 @@ import {
   Param,
   Post,
   Put,
-  Req,
+  Request,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
@@ -15,6 +15,7 @@ import { UsersService } from './users.service';
 import { CreateProfileRequestDto, updateProfileRequestDto, User } from './dto';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { Console } from 'console';
 
 @UseGuards(JwtAuthGuard)
 @ApiTags('users')
@@ -22,19 +23,22 @@ import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 export class UsersController {
   constructor(private userService: UsersService) {}
 
-  /* Profile Endpoints */
-  @Public()
-  @Get('profile/:id')
-  async getProfileByUserId(@Param('id') id: number) {
-    return await this.userService.getUserProfileById(id);
-  }
+  /*** Profile Endpoints ***/
 
-  @Get('profile/me')
-  async getMyProfile(@CurrentUser() user: User) {
-    if (!user) {
+  //  Get own profile -> /users/me/profile
+  @Get('me/profile')
+  async getMyProfile(@Request() req) {
+    if (!req.user) {
       throw new UnauthorizedException();
     }
-    return await this.userService.getUserProfileById(user.userId);
+
+    return await this.userService.getUserProfileById(req.user.userId);
+  }
+
+  @Public()
+  @Get(':id/profile')
+  async getProfileByUserId(@Param('id') id: number) {
+    return await this.userService.getUserProfileById(id);
   }
 
   @Post('profile')
@@ -55,7 +59,7 @@ export class UsersController {
   @Put('profile')
   async updateProfile(
     @Body() updateProfileRequest: updateProfileRequestDto,
-    @Req() req,
+    @Request() req,
   ) {
     if (!req.user) {
       throw new UnauthorizedException();
