@@ -12,8 +12,9 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { UsersService } from './users.service';
-import { CreateProfileRequestDto, updateProfileRequestDto } from './dto';
+import { CreateProfileRequestDto, updateProfileRequestDto, User } from './dto';
 import { Public } from 'src/auth/decorators/public.decorator';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 
 @UseGuards(JwtAuthGuard)
 @ApiTags('users')
@@ -29,25 +30,25 @@ export class UsersController {
   }
 
   @Get('profile/me')
-  async getMyProfile(@Req() req) {
-    if (!req.user) {
+  async getMyProfile(@CurrentUser() user: User) {
+    if (!user) {
       throw new UnauthorizedException();
     }
-    return await this.userService.getUserProfileById(req.user.userId);
+    return await this.userService.getUserProfileById(user.userId);
   }
 
   @Post('profile')
   async createProfile(
     @Body() createProfileRequestDto: CreateProfileRequestDto,
-    @Req() req,
+    @CurrentUser() user: User,
   ) {
-    if (!req.user) {
+    if (!user) {
       throw new UnauthorizedException();
     }
 
     return await this.userService.createUserProfile(
       createProfileRequestDto,
-      req.user.userId,
+      user.userId,
     );
   }
 
