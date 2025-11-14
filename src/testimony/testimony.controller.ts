@@ -41,13 +41,8 @@ export class TestimonyController {
 
     return await this.testimonyService.createTestimony(
       createTestimonyDto,
-      request.user.id,
+      request.user.userId,
     );
-  }
-
-  @Get('users/:userId')
-  async getTestimoniesByUserId(@Param('userId') userId: number) {
-    return await this.testimonyService.getTestimoniesByUserId(userId);
   }
 
   @Get(':id')
@@ -70,5 +65,10 @@ export class TestimonyController {
       req.user.userId,
       updatedTestimonyDto,
     );
+  }
+
+  @Get('users/:userId')
+  async getTestimoniesByUserId(@Param('userId') userId: number) {
+    return await this.testimonyService.getTestimoniesByUserId(userId);
   }
 }
