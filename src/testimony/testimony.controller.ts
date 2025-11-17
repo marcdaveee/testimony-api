@@ -17,6 +17,7 @@ import { TestimonyService } from './testimony.service';
 import { CreateTestimonyRequestDto, UpdateTestimonyRequestDto } from './dto';
 import { PaginatedRequestDto } from 'src/common/dto/paginated-dto';
 import { ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 
 @UseGuards(JwtAuthGuard)
 @ApiTags('testimonies')
@@ -30,39 +31,39 @@ export class TestimonyController {
     return await this.testimonyService.getLatestTestimonies(query);
   }
 
-  @Post()
-  async createNewTestimony(
-    @Body() createTestimonyDto: CreateTestimonyRequestDto,
-    @Req() request,
-  ) {
-    if (!request.user) {
-      throw new UnauthorizedException();
-    }
-
-    return await this.testimonyService.createTestimony(
-      createTestimonyDto,
-      request.user.userId,
-    );
-  }
-
   @Get(':id')
   async getTestimonyDetailById(@Param('id') id: number) {
     return await this.testimonyService.getTestimonyDetailsById(id);
   }
 
+  @Post()
+  async createNewTestimony(
+    @Body() createTestimonyDto: CreateTestimonyRequestDto,
+    @CurrentUser() user,
+  ) {
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    return await this.testimonyService.createTestimony(
+      createTestimonyDto,
+      user.userId,
+    );
+  }
+
   @Put(':id')
   async updateTestimonyItembyId(
     @Param('id') id: number,
-    @Req() req,
+    @CurrentUser() user,
     @Body() updatedTestimonyDto: UpdateTestimonyRequestDto,
   ) {
-    if (!req.user) {
+    if (!user) {
       throw new UnauthorizedException();
     }
 
     return await this.testimonyService.updateTestimonyItem(
       id,
-      req.user.userId,
+      user.userId,
       updatedTestimonyDto,
     );
   }
