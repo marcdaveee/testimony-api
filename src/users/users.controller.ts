@@ -27,12 +27,12 @@ export class UsersController {
 
   //  Get own profile -> /users/me/profile
   @Get('me/profile')
-  async getMyProfile(@Request() req) {
-    if (!req.user) {
+  async getMyProfile(@CurrentUser() currentUser) {
+    if (!currentUser) {
       throw new UnauthorizedException();
     }
 
-    return await this.userService.getUserProfileById(req.user.userId);
+    return await this.userService.getUserProfileById(currentUser.userId);
   }
 
   @Public()
@@ -59,15 +59,15 @@ export class UsersController {
   @Put('profile')
   async updateProfile(
     @Body() updateProfileRequest: updateProfileRequestDto,
-    @Request() req,
+    @CurrentUser() currentUser,
   ) {
-    if (!req.user) {
+    if (!currentUser) {
       throw new UnauthorizedException();
     }
 
     return await this.userService.updateUserProfile(
       updateProfileRequest,
-      req.user.userId,
+      currentUser.userId,
     );
   }
 }

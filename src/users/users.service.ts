@@ -97,7 +97,7 @@ export class UsersService {
         userId: userId,
         firstName: request.firstName,
         lastName: request.lastName,
-        birthDate: request.birthDate,
+        birthDate: new Date(request.birthDate),
         address: request.address,
         country: request.country,
         createDate: new Date(),
