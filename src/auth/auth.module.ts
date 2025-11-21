@@ -11,9 +11,6 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     JwtModule.register({
       global: true,
       secret: configSettings.jwtSettings.secretKey,
-      signOptions: {
-        expiresIn: '5min',
-      },
     }),
 
     PrismaModule,

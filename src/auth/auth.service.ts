@@ -46,13 +46,18 @@ export class AuthService {
       },
     });
 
-    const accessToken = await this.generateToken({
+    const accessToken = await this.generateAccessToken({
       userId: user.id,
       email: user.email,
     });
 
+    const refreshToken = await this.generateRefreshToken({ userId: user.id });
+
     return {
       access_token: accessToken,
+      access_token_expires_in: 60 * 2, // will be set to 15 mins soon
+      refresh_token: refreshToken,
+      refresh_token_expires_in: 60 * 60 * 24 * 7, // 7 days
       user: {
         id: user.id,
         email: user.email,
@@ -85,13 +90,20 @@ export class AuthService {
       });
     }
 
-    const token = await this.generateToken({
+    const accessToken = await this.generateAccessToken({
       userId: userAcc.id,
       email: userAcc.email,
     });
 
+    const refreshToken = await this.generateRefreshToken({
+      userId: userAcc.id,
+    });
+
     return {
-      access_token: token,
+      access_token: accessToken,
+      access_token_expires_in: 60 * 2, // will be set to 15 mins soon
+      refresh_token: refreshToken,
+      refresh_token_expires_in: 60 * 60 * 24 * 7, // 7 days
       user: {
         id: userAcc.id,
         email: userAcc.email,
@@ -99,13 +111,25 @@ export class AuthService {
     };
   }
 
-  async generateToken(payload: JwtPayload) {
-    return await this.jwtService.signAsync({
-      sub: payload.userId,
-      userId: payload.userId,
-      username: payload.email,
-      email: payload.email,
-    });
+  async generateAccessToken(payload: JwtPayload) {
+    return await this.jwtService.signAsync(
+      {
+        sub: payload.userId,
+        userId: payload.userId,
+        username: payload.email,
+        email: payload.email,
+      },
+      { expiresIn: '2m' },
+    );
+  }
+
+  async generateRefreshToken(payload: { userId: number | string }) {
+    return this.jwtService.signAsync(
+      {
+        sub: payload.userId,
+      },
+      { expiresIn: '7d' },
+    );
   }
 
   async validatePassword(input: string, hashedPassword: string) {
