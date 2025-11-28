@@ -26,3 +26,14 @@ export class SignInDto {
   @IsNotEmpty()
   password: string;
 }
+
+export interface ILoginResponseDto {
+  user: {
+    id: number | string;
+    email: string;
+  };
+  access_token: string;
+  access_token_expires_in: number;
+  refresh_token: string;
+  refresh_token_expires_in: number;
+}

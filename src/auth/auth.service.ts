@@ -5,12 +5,13 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { SignInDto, SignUpDto } from './dto/auth-dto';
+import { ILoginResponseDto, SignInDto, SignUpDto } from './dto/auth-dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 import * as argon2 from 'argon2';
 
 import { JwtService } from '@nestjs/jwt';
+import { UsersService } from 'src/users/users.service';
 
 export interface JwtPayload {
   userId: number | string;
@@ -20,12 +21,16 @@ export interface JwtPayload {
 
 @Injectable()
 export class AuthService {
+  private accessTokenExpiry = 60 * 2; // 2 mins temporarily. Will be switched to 15 mins
+  private refreshTokenExpiry = 60 * 60 * 24 * 7; // 7 days
+
   constructor(
     private readonly prisma: PrismaService,
     private jwtService: JwtService,
+    private userService: UsersService,
   ) {}
 
-  async createUser(newUser: SignUpDto) {
+  async createUser(newUser: SignUpDto): Promise<ILoginResponseDto> {
     const isExist = await this.prisma.user.findFirst({
       where: {
         email: { equals: newUser.email },
@@ -55,9 +60,9 @@ export class AuthService {
 
     return {
       access_token: accessToken,
-      access_token_expires_in: 60 * 2, // will be set to 15 mins soon
+      access_token_expires_in: this.accessTokenExpiry, // will be set to 15 mins soon
       refresh_token: refreshToken,
-      refresh_token_expires_in: 60 * 60 * 24 * 7, // 7 days
+      refresh_token_expires_in: this.refreshTokenExpiry, // 7 days
       user: {
         id: user.id,
         email: user.email,
@@ -65,7 +70,7 @@ export class AuthService {
     };
   }
 
-  async loginUser(signinDto: SignInDto) {
+  async loginUser(signinDto: SignInDto): Promise<ILoginResponseDto> {
     const userAcc = await this.prisma.user.findFirst({
       where: {
         email: signinDto.email,
@@ -101,12 +106,41 @@ export class AuthService {
 
     return {
       access_token: accessToken,
-      access_token_expires_in: 60 * 2, // will be set to 15 mins soon
+      access_token_expires_in: this.accessTokenExpiry, // will be set to 15 mins soon
       refresh_token: refreshToken,
-      refresh_token_expires_in: 60 * 60 * 24 * 7, // 7 days
+      refresh_token_expires_in: this.refreshTokenExpiry, // 7 days
       user: {
         id: userAcc.id,
         email: userAcc.email,
+      },
+    };
+  }
+
+  async refreshTokenAsync(refreshToken: string): Promise<ILoginResponseDto> {
+    const payload = await this.jwtService.verifyAsync(refreshToken);
+    const user = await this.userService.getUserProfileById(payload.sub);
+
+    if (!payload || !user) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const accessToken = await this.generateAccessToken({
+      userId: user.id,
+      email: user.email,
+    });
+
+    const newRefreshToken = await this.generateRefreshToken({
+      userId: user.id,
+    });
+
+    return {
+      access_token: accessToken,
+      access_token_expires_in: this.accessTokenExpiry, // will be set to 15 mins soon
+      refresh_token: newRefreshToken,
+      refresh_token_expires_in: this.refreshTokenExpiry,
+      user: {
+        id: user.id,
+        email: user.email,
       },
     };
   }

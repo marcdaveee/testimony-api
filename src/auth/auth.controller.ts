@@ -5,7 +5,8 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  Request,
+  Req,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -14,6 +15,7 @@ import { AuthGuard } from './guards/auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Public } from './decorators/public.decorator';
 import { ApiTags } from '@nestjs/swagger';
+import type { Request } from 'express';
 
 @UseGuards(JwtAuthGuard)
 @ApiTags('auth')
@@ -35,8 +37,21 @@ export class AuthController {
     return await this.authService.loginUser(signInReq);
   }
 
+  @Post('refresh-token')
+  async refreshToken(@Req() req: Request) {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader) {
+      throw new UnauthorizedException('Authorization header is missing');
+    }
+
+    const [type, refreshToken] = authHeader.split(' ');
+
+    console.log(`Type: ${type} | val: ${refreshToken}`);
+    return await this.authService.refreshTokenAsync(refreshToken);
+  }
+
   @Get('me')
-  getMe(@Request() req) {
+  getMe(@Req() req) {
     if (req.user) {
       console.log(
         `Current user -> id: ${req?.user?.userId} | email: ${req?.user?.email}`,
